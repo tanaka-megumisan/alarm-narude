@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>アラーム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <style>
+        :root {
+            --font-size-base: 16px;
+            --bg-color: #1d2a7a;
+            --text-color: white;
+            --text-color-faded: #ccc;
+            --accent-color: #86f20b;
+            --header-bg: #1d2a7a;
+            --nav-bg: #1d2a7a;
+            --nav-active-bg: white;
+            --nav-active-color: #1d2a7a;
+            --alarm-pm-bg: #2c3e8a;
+            --alarm-pm-color: white;
+            --alarm-disabled-color: gray;
+            --alarm-disabled-pm-bg: #4a5a9a;
+            --button-bg: #444;
+            --button-text-color: white;
+            --control-bg: #f0f0f0;
+            --control-text-color: #1d2a7a;
+            --control-border-color: #aaa;
+        }
+
+        /* 朝モード */
+        .theme-morning {
+            --bg-color: #f0f8ff;
+            --text-color: #2c3e50;
+            --text-color-faded: #555;
+            --accent-color: #ff8c00;
+            --header-bg: #add8e6;
+            --nav-bg: #add8e6;
+            --nav-active-bg: #4682b4;
+            --nav-active-color: white;
+            --alarm-pm-bg: #e6e6fa;
+            --alarm-pm-color: #2c3e50;
+            --alarm-disabled-pm-bg: #dcdcdc;
+            --control-bg: #e6f7ff;
+            --control-text-color: #2c3e50;
+            --control-border-color: #99cbe2;
+        }
+        /* 夜モード */
+        .theme-night {
+            --bg-color: #1d2a7a;
+            --text-color: white;
+            --text-color-faded: #ccc;
+            --accent-color: #86f20b;
+            --header-bg: #1d2a7a;
+            --nav-bg: #1d2a7a;
+            --nav-active-bg: white;
+            --nav-active-color: #1d2a7a;
+            --alarm-pm-bg: white; /* 変更: 午後のアラームの背景色 */
+            --alarm-pm-color: #1d2a7a; /* 変更: 午後のアラームの文字色 */
+            --alarm-disabled-pm-bg: #e0e0e0; /* 変更: 無効な午後のアラームの背景色 */
+            --control-bg: #3a4c9a;
+            --control-text-color: white;
+            --control-border-color: #5a6cb0;
+        }
+        /* 季節カラー: 春 */
+        .theme-spring {
+            --bg-color: #fef4f4;
+            --text-color: #583c3c;
+            --text-color-faded: #8d6e63;
+            --accent-color: #ff8a80;
+            --header-bg: #ffc0cb;
+            --nav-bg: #ffc0cb;
+            --nav-active-bg: #db7093;
+            --nav-active-color: white;
+            --alarm-pm-bg: #ffe4e1;
+            --alarm-pm-color: #583c3c;
+            --control-bg: #ffebee;
+            --control-text-color: #583c3c;
+            --control-border-color: #ffcdd2;
+        }
+        /* 季節カラー: 秋 */
+        .theme-autumn {
+            --bg-color: #fff8e1;
+            --text-color: #6d4c41;
+            --text-color-faded: #8d6e63;
+            --accent-color: #ff8a65;
+            --header-bg: #ffcc80;
+            --nav-bg: #ffcc80;
+            --nav-active-bg: #e65100;
+            --nav-active-color: white;
+            --alarm-pm-bg: #ffe0b2;
+            --alarm-pm-color: #6d4c41;
+            --control-bg: #fff3e0;
+            --control-text-color: #6d4c41;
+            --control-border-color: #ffcc80;
+        }
+
+
+        html {
+            font-size: var(--font-size-base);
+        }
+
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 20px 0 60px; /* footerの高さ分を追加 */
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .clock-container,
+        #alarmPage,
+        footer {
+            width: 375px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 16px;
+            font-size: 1.5rem; /* 24px */
+            font-weight: bold;
+            user-select: none;
+            width: 375px;
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--header-bg);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header span {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .page {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem 1rem;
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .alarm-item.alarm-list {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            user-select: none;
+            position: relative;
+            box-sizing: border-box;
+            border-top: none;
+        }
+
+        .alarm-item.alarm-list.alarm-pm-theme {
+            background-color: var(--alarm-pm-bg);
+            color: var(--alarm-pm-color);
+            border-radius: 0;
+        }
+
+        .alarm-item.disabled-alarm {
+            color: var(--alarm-disabled-color);
+        }
+        .alarm-item.disabled-alarm.alarm-pm-theme {
+            background-color: var(--alarm-disabled-pm-bg);
+            color: var(--alarm-disabled-color);
+        }
+
+        .alarm-item.alarm-list > span:first-child,
+        .alarm-item.history-list .top-row > span:first-child {
+            font-size: 1.5rem; /* 24px */
+            font-weight: bold;
+            flex-grow: 1;
+        }
+
+        .alarm-item.alarm-list > span:first-child {
+            cursor: pointer;
+        }
+
+        .alarm-item.history-list {
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-top: none;
+            border-bottom: 1px solid var(--text-color-faded);
+            background-color: transparent;
+            color: var(--text-color);
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+        
+        .alarm-item.history-list.disabled-alarm {
+            color: var(--alarm-disabled-color);
+        }
+
+        .alarm-item.history-list .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            gap: 20px;
+            margin-bottom: 20px;
+            color: inherit;
+        }
+
+        .alarm-item.history-list .top-row .toggle {
+            margin-left: 16px;
+            flex-shrink: 0;
+        }
+
+        .alarm-item.history-list .detail-info {
+            font-size: 0.875rem; /* 14px */
+            color: var(--text-color);
+            opacity: 0.8;
+            line-height: 1.5;
+            white-space: normal;
+            width: 100%;
+        }
+
+        .toggle {
+            border: 1px solid var(--button-bg);
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            background: var(--button-bg);
+            color: var(--button-text-color);
+        }
+
+        footer {
+            position: fixed;
+            display: flex;
+            padding: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-width: 375px;
+            margin: 0 auto;
+            background: var(--nav-bg);
+            border-top: 1px solid #333;
+            height: 48px;
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+            font-size: 0.75rem; /* 12px */
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            user-select: none;
+        }
+
+        .nav-item.active {
+            background: var(--nav-active-bg);
+            color: var(--nav-active-color);
+        }
+
+        .icon {
+            font-size: 1.25rem; /* 20px */
+            margin-bottom: 4px;
+        }
+
+        #addAlarmUI {
+            display: none;
+            background: white;
+            color: #1d2a7a;
+            border-radius: 8px;
+            margin: 1rem;
+            padding: 1rem;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10000;
+            max-width: 90vw;
+            width: 300px;
+        }
+
+        .time-picker {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin: 1rem 0;
+        }
+
+        .time-select {
+            font-size: 1.5rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background: white;
+            color: #1d2a7a;
+            cursor: pointer;
+        }
+
+        .clock-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 16px;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .clock {
+            font-size: 4.5rem; /* 72px */
+            font-weight: 700;
+            color: var(--accent-color);
+            text-align: center;
+            user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: 4px;
+        }
+
+        #alarmModal {
+            display: none;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding-top: 100px;
+            align-items: center;
+            font-size: 1.75rem; /* 28px */
+            user-select: none;
+            gap: 100px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            z-index: 9999;
+        }
+
+        #alarmModalLabel {
+            margin-bottom: 0px;
+            font-size: 1.875rem; /* 30px */
+            user-select: none;
+        }
+        
+        #friendlyMessage {
+            font-size: 1.25rem; /* 20px */
+            margin-top: -80px;
+            color: #f1c40f;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        #alarmModal button {
+            font-size: 1.25rem;
+            margin: 0;
+            padding: 12px 30px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #stopBtn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        #snoozeBtn {
+            background-color: #89df7e;
+            color: white;
+            margin-top: 20px;
+        }
+
+        #historyPage,
+        #settingsPage {
+            max-width: 375px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            box-sizing: border-box;
+        }
+
+        #historyContainer {
+            padding: 1rem 0;
+        }
+
+        /* --- Settings Page Styles --- */
+        .settings-section {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--text-color-faded);
+        }
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+        .settings-section h4 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            min-height: 38px;
+        }
+        .settings-item:last-child {
+            margin-bottom: 0;
+        }
+        .settings-item label {
+            font-size: 1rem;
+            padding-right: 10px;
+        }
+        .settings-item select, 
+        .settings-item input[type="range"] {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid var(--control-border-color);
+            background-color: var(--control-bg);
+            color: var(--control-text-color);
+            max-width: 150px;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        .settings-item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--accent-color);
+        }
+        #volumeValue {
+            margin-left: 10px;
+            min-width: 30px;
+            text-align: right;
+            color: var(--text-color);
+        }
+        .help-guide {
+             line-height: 1.6;
+             font-size: 0.9rem;
+             color: var(--text-color-faded);
+        }
+        .help-guide p {
+            margin: 0 0 0.5rem;
+        }
+    </style>
+</head>
+<body class="theme-night">
+    <main class="clock-container">
+        <div id="clock" class="clock">--:--:--</div>
+    </main>
+    <header>
+        <span id="toggleDeleteBtn" aria-label="削除モード切替" role="button" tabindex="0" style="cursor:pointer;">
+            <i class="bi bi-trash"></i>
+        </span>
+        <span id="showAddBtn" aria-label="アラーム追加">＋</span>
+    </header>
+
+    <div id="alarmPage" class="page active" aria-label="アラーム一覧"></div>
+
+    <div id="historyPage" class="page" aria-label="履歴ページ">
+        <h3>使用履歴</h3>
+        <div id="historyContainer"></div>
+    </div>
+
+    <div id="settingsPage" class="page" aria-label="設定ページ">
+        <h3>設定</h3>
+        
+        <div class="settings-section">
+            <h4>アラーム設定</h4>
+            <div class="settings-item">
+                <label for="snoozeTime">スヌーズ時間</label>
+                <select id="snoozeTime">
+                    <option value="3">3分</option>
+                    <option value="5">5分</option>
+                    <option value="7">7分</option>
+                    <option value="10">10分</option>
+                    <option value="15">15分</option>
+                </select>
+            </div>
+            <div class="settings-item">
+                <label for="alarmSound">アラーム音</label>
+                <select id="alarmSound">
+                    <option value="sine">サイン波</option>
+                    <option value="square">矩形波</option>
+                    <option value="sawtooth">のこぎり波</option>
+                    <option value="triangle">三角波</option>
+                </select>
+            </div>
+            <div class="settings-item">
+                <label for="alarmVolume">音量</label>
+                <div>
+                    <input type="range" id="alarmVolume" min="0" max="1" step="0.1">
+                    <span id="volumeValue"></span>
+                </div>
+            </div>
+            <div class="settings-item">
+                <label for="gradualVolume">徐々に音量UP</label>
+                <input type="checkbox" id="gradualVolume">
+            </div>
+            <div class="settings-item">
+                <label for="autoSnooze">自動スヌーズ (停止ボタンでスヌーズ)</label>
+                <input type="checkbox" id="autoSnooze">
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h4>表示設定</h4>
+            <div class="settings-item">
+                <label for="theme">背景テーマ</label>
+                <select id="theme">
+                    <option value="theme-night">夜モード</option>
+                    <option value="theme-morning">朝モード</option>
+                    <option value="theme-spring">季節：春</option>
+                    <option value="theme-autumn">季節：秋</option>
+                </select>
+            </div>
+            <div class="settings-item">
+                <label for="fontSize">フォントサイズ</label>
+                <select id="fontSize">
+                    <option value="14px">小</option>
+                    <option value="16px">中</option>
+                    <option value="18px">大</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h4>通知設定</h4>
+            <div class="settings-item">
+                <label for="vibration">バイブレーション</label>
+                <input type="checkbox" id="vibration">
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h4>ヘルプ</h4>
+            <div class="help-guide">
+                <p><strong>アラームの追加：</strong>右上の「＋」ボタンから追加します。</p>
+                <p><strong>アラームの変更：</strong>アラーム一覧の時刻をタップすると変更できます。</p>
+                <p><strong>アラームの削除：</strong>左上のゴミ箱アイコンをタップして削除モードに切り替え、削除したいアラームをタップします。</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="addAlarmUI" aria-modal="true" role="dialog" aria-labelledby="addAlarmTitle">
+        <h3 id="addAlarmTitle">アラーム追加</h3>
+        <div class="time-picker">
+            <select id="hourSelect" class="time-select" aria-label="時選択"></select>
+            :
+            <select id="minuteSelect" class="time-select" aria-label="分選択"></select>
+        </div>
+        <div style="text-align:right;">
+            <button id="addAlarmBtn" style="margin-right:8px;">追加</button>
+            <button id="cancelAddBtn">キャンセル</button>
+        </div>
+    </div>
+
+    <div id="alarmModal" role="alertdialog" aria-modal="true" aria-labelledby="alarmModalLabel" tabindex="-1">
+        <div id="alarmModalLabel">アラームです！</div>
+        <div id="friendlyMessage" style="display: none;"></div>
+        <button id="stopBtn" aria-label="アラーム停止">ストップ</button>
+        <button id="snoozeBtn" aria-label="スヌーズ">スヌーズ</button>
+    </div>
+
+    <footer role="navigation" aria-label="メインナビゲーション">
+        <div class="nav-item active" data-page="alarmPage" tabindex="0" aria-current="page" aria-label="アラームページ">
+            <i class="bi bi-alarm icon"></i>
+            アラーム
+        </div>
+        <div class="nav-item" data-page="historyPage" tabindex="0" aria-label="履歴ページ">
+            <i class="bi bi-clock-history icon"></i>
+            履歴
+        </div>
+        <div class="nav-item" data-page="settingsPage" tabindex="0" aria-label="設定ページ">
+            <i class="bi bi-gear icon"></i>
+            設定
+        </div>
+    </footer>
+
+    <script>
+        (() => {
+            "use strict";
+
+            const clock = document.getElementById("clock");
+            const alarmPage = document.getElementById("alarmPage");
+            const addAlarmUI = document.getElementById("addAlarmUI");
+            const hourSelect = document.getElementById("hourSelect");
+            const minuteSelect = document.getElementById("minuteSelect");
+            const addAlarmBtn = document.getElementById("addAlarmBtn");
+            const cancelAddBtn = document.getElementById("cancelAddBtn");
+            const showAddBtn = document.getElementById("showAddBtn");
+            const toggleDeleteBtn = document.getElementById("toggleDeleteBtn");
+            const addAlarmTitle = document.getElementById("addAlarmTitle");
+            const alarmModal = document.getElementById("alarmModal");
+            const alarmModalLabel = document.getElementById("alarmModalLabel");
+            const friendlyMessage = document.getElementById("friendlyMessage");
+            const stopBtn = document.getElementById("stopBtn");
+            const snoozeBtn = document.getElementById("snoozeBtn");
+            const navItems = document.querySelectorAll("footer .nav-item");
+            const pages = document.querySelectorAll(".page");
+            const historyContainer = document.getElementById("historyContainer");
+
+            // --- Settings Elements ---
+            const settingsElements = {
+                snoozeTime: document.getElementById('snoozeTime'),
+                alarmSound: document.getElementById('alarmSound'),
+                alarmVolume: document.getElementById('alarmVolume'),
+                volumeValue: document.getElementById('volumeValue'),
+                gradualVolume: document.getElementById('gradualVolume'),
+                autoSnooze: document.getElementById('autoSnooze'),
+                theme: document.getElementById('theme'),
+                fontSize: document.getElementById('fontSize'),
+                vibration: document.getElementById('vibration'),
+            };
+
+            let alarms = [];
+            let alarmTimeouts = {};
+            let snoozeTimeout = null;
+            let isAlarmPlaying = false;
+            let alarmHistory = [];
+            let isDeleteMode = false;
+            let editingAlarmId = null;
+            let currentAlarmModal = null;
+
+            let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            let oscillator;
+            let gainNode;
+
+            let settings = {};
+
+            for (let h = 0; h < 24; h++) {
+                const option = document.createElement("option");
+                option.value = h;
+                option.textContent = h.toString().padStart(2, "0");
+                hourSelect.appendChild(option);
+            }
+            for (let m = 0; m < 60; m++) {
+                const option = document.createElement("option");
+                option.value = m;
+                option.textContent = m.toString().padStart(2, "0");
+                minuteSelect.appendChild(option);
+            }
+
+            // --- Settings Functions ---
+            function loadSettings() {
+                const savedSettings = JSON.parse(localStorage.getItem('alarmSettings'));
+                settings = {
+                    snoozeTime: 5,
+                    alarmSound: 'sine',
+                    alarmVolume: 0.5,
+                    gradualVolume: true,
+                    autoSnooze: false,
+                    theme: 'theme-night',
+                    fontSize: '16px',
+                    vibration: true,
+                    ...savedSettings
+                };
+            }
+
+            function saveSettings() {
+                localStorage.setItem('alarmSettings', JSON.stringify(settings));
+            }
+
+            function applySettings() {
+                document.body.className = settings.theme;
+                document.documentElement.style.fontSize = settings.fontSize;
+            }
+
+            function updateSettingsUI() {
+                settingsElements.snoozeTime.value = settings.snoozeTime;
+                settingsElements.alarmSound.value = settings.alarmSound;
+                settingsElements.alarmVolume.value = settings.alarmVolume;
+                settingsElements.volumeValue.textContent = parseFloat(settings.alarmVolume).toFixed(1);
+                settingsElements.gradualVolume.checked = settings.gradualVolume;
+                settingsElements.autoSnooze.checked = settings.autoSnooze;
+                settingsElements.theme.value = settings.theme;
+                settingsElements.fontSize.value = settings.fontSize;
+                settingsElements.vibration.checked = settings.vibration;
+                applySettings();
+            }
+
+            function initSettings() {
+                loadSettings();
+                updateSettingsUI();
+
+                Object.keys(settingsElements).forEach(key => {
+                    const element = settingsElements[key];
+                    if (!element) return;
+                    
+                    const eventType = (element.type === 'checkbox' || element.tagName === 'SELECT') ? 'change' : 'input';
+                    element.addEventListener(eventType, (e) => {
+                         const target = e.target;
+                        let value;
+                        if (target.type === 'checkbox') {
+                            value = target.checked;
+                        } else if (target.type === 'range') {
+                            value = parseFloat(target.value);
+                        } else {
+                            value = target.value;
+                        }
+                        
+                        settings[key] = value;
+
+                        if (key === 'alarmVolume') {
+                            settingsElements.volumeValue.textContent = value.toFixed(1);
+                        }
+                        saveSettings();
+                        applySettings();
+                    });
+                });
+            }
+
+            function updateClock() {
+                const now = new Date();
+                const hh = now.getHours().toString().padStart(2, "0");
+                const mm = now.getMinutes().toString().padStart(2, "0");
+                const ss = now.getSeconds().toString().padStart(2, "0");
+                clock.textContent = `${hh}:${mm}:${ss}`;
+            }
+
+            function sortAlarms() {
+                alarms.sort((a, b) => a.hour !== b.hour ? a.hour - b.hour : a.minute - b.minute);
+            }
+
+            function renderAlarms() {
+                alarmPage.innerHTML = "";
+                if (alarms.length === 0) {
+                    alarmPage.textContent = "アラームが設定されていません。";
+                    return;
+                }
+                alarms.forEach(alarm => {
+                    const div = document.createElement("div");
+                    div.className = "alarm-item alarm-list";
+                    div.dataset.id = alarm.id;
+
+                    const timeSpan = document.createElement("span");
+                    timeSpan.textContent = `${alarm.hour.toString().padStart(2, "0")}:${alarm.minute.toString().padStart(2, "0")}`;
+                    
+                    if (!isDeleteMode) {
+                        timeSpan.title = "クリックして時刻を変更";
+                        timeSpan.addEventListener("click", () => openEditUI(alarm));
+                    }
+
+                    div.appendChild(timeSpan);
+
+                    if (alarm.hour >= 12) {
+                        div.classList.add("alarm-pm-theme");
+                    }
+
+                    const toggle = document.createElement("button");
+                    toggle.className = "toggle";
+                    toggle.textContent = alarm.enabled ? "ON" : "OFF";
+
+                    if (!alarm.enabled) {
+                        div.classList.add('disabled-alarm');
+                    }
+
+                    toggle.addEventListener("click", () => {
+                        alarm.enabled = !alarm.enabled;
+                        if (alarm.enabled) scheduleAlarm(alarm);
+                        else cancelAlarm(alarm.id);
+                        saveAlarms();
+                        renderAlarms();
+                    });
+
+                    div.appendChild(toggle);
+
+                    if (isDeleteMode) {
+                        div.style.backgroundColor = "#700000";
+                        div.style.color = "white";
+                        div.style.cursor = "pointer";
+                        div.title = "クリックで削除";
+                        div.onclick = () => {
+                            if (confirm("このアラームを削除しますか？")) {
+                                deleteAlarm(alarm.id);
+                            }
+                        };
+                    }
+                    alarmPage.appendChild(div);
+                });
+            }
+
+            function addAlarm(hour, minute) {
+                const newAlarm = { id: Date.now(), hour, minute, enabled: true };
+                alarms.push(newAlarm);
+                sortAlarms();
+                scheduleAlarm(newAlarm);
+                saveAlarms();
+                renderAlarms();
+            }
+
+            function updateAlarm(id, hour, minute) {
+                const alarmToUpdate = alarms.find(a => a.id === id);
+                if (alarmToUpdate) {
+                    alarmToUpdate.hour = hour;
+                    alarmToUpdate.minute = minute;
+                    sortAlarms();
+                    scheduleAlarm(alarmToUpdate);
+                    saveAlarms();
+                    renderAlarms();
+                }
+            }
+
+            function deleteAlarm(id) {
+                alarms = alarms.filter(a => a.id !== id);
+                cancelAlarm(id);
+                saveAlarms();
+                renderAlarms();
+            }
+
+            function scheduleAlarm(alarm) {
+                cancelAlarm(alarm.id);
+                if (!alarm.enabled) return;
+
+                const now = new Date();
+                const alarmTime = new Date();
+                alarmTime.setHours(alarm.hour, alarm.minute, 0, 0);
+
+                if (alarmTime <= now) alarmTime.setDate(alarmTime.getDate() + 1);
+                
+                const timeout = alarmTime.getTime() - now.getTime();
+                alarmTimeouts[alarm.id] = setTimeout(() => triggerAlarm(alarm), timeout);
+            }
+
+            function cancelAlarm(id) {
+                if (alarmTimeouts[id]) {
+                    clearTimeout(alarmTimeouts[id]);
+                    delete alarmTimeouts[id];
+                }
+            }
+            
+            function triggerAlarm(alarm) {
+                alarm.enabled = false;
+                saveAlarms();
+                renderAlarms();
+
+                localStorage.setItem("snoozeCount", "0");
+                isAlarmPlaying = true;
+                showAlarmModal(alarm);
+                playAlarmSound();
+                addHistoryEntry(alarm, 0);
+            }
+
+            function playAlarmSound() {
+                pauseAlarmSound();
+                if (settings.vibration && "vibrate" in navigator) {
+                    navigator.vibrate([500, 200, 500, 200, 500]);
+                }
+                
+                gainNode = audioCtx.createGain();
+                gainNode.connect(audioCtx.destination);
+                
+                const startVolume = settings.gradualVolume ? 0.01 : settings.alarmVolume;
+                gainNode.gain.setValueAtTime(startVolume, audioCtx.currentTime);
+
+                if (settings.gradualVolume) {
+                    gainNode.gain.linearRampToValueAtTime(settings.alarmVolume, audioCtx.currentTime + 10);
+                } else {
+                    gainNode.gain.setValueAtTime(settings.alarmVolume, audioCtx.currentTime);
+                }
+
+                oscillator = audioCtx.createOscillator();
+                oscillator.type = settings.alarmSound;
+                oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+                oscillator.connect(gainNode);
+                oscillator.start();
+            }
+
+            function pauseAlarmSound() {
+                if (settings.vibration && "vibrate" in navigator) navigator.vibrate(0);
+                if (oscillator) {
+                    oscillator.stop();
+                    oscillator.disconnect();
+                    oscillator = null;
+                }
+                if (gainNode) {
+                    gainNode.disconnect();
+                    gainNode = null;
+                }
+            }
+
+            function stopAlarmPermanently() {
+                isAlarmPlaying = false;
+                alarmModal.style.display = "none";
+                if (snoozeTimeout) clearTimeout(snoozeTimeout);
+                pauseAlarmSound();
+                
+                const snoozeCount = parseInt(localStorage.getItem("snoozeCount") || "0", 10);
+                const message = (snoozeCount >= 2) ? "二度寝しても、えらい！よくがんばってるよ！" : "おはよう！";
+                alert(message);
+                
+                updateHistoryOnStop(currentAlarmModal.id, -1);
+                currentAlarmModal = null;
+            }
+
+            function snoozeAlarm(currentAlarm) {
+                pauseAlarmSound();
+                if (snoozeTimeout) clearTimeout(snoozeTimeout);
+                alarmModal.style.display = "none";
+
+                let count = parseInt(localStorage.getItem("snoozeCount") || "0", 10);
+                count++;
+                localStorage.setItem("snoozeCount", count);
+                updateHistoryOnStop(currentAlarm.id, count);
+
+                snoozeTimeout = setTimeout(() => {
+                    isAlarmPlaying = true;
+                    showAlarmModal(currentAlarm, count);
+                    playAlarmSound();
+                }, parseInt(settings.snoozeTime, 10) * 60 * 1000);
+            }
+
+            function addHistoryEntry(alarm, snoozeCount) {
+                const now = new Date();
+                const targetWakeupTime = new Date();
+                targetWakeupTime.setHours(alarm.hour, alarm.minute, 0, 0);
+                targetWakeupTime.setTime(targetWakeupTime.getTime() + 10 * 60 * 1000); // 10分後を目標とする
+                const targetWakeupStr = targetWakeupTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                const newEntry = {
+                    id: Date.now(),
+                    alarmId: alarm.id,
+                    hour: alarm.hour,
+                    minute: alarm.minute,
+                    time: now.toLocaleString(),
+                    snoozeInterval: settings.snoozeTime,
+                    targetWakeup: targetWakeupStr,
+                    snoozeCount: snoozeCount,
+                    stoppedAt: null
+                };
+                alarmHistory.unshift(newEntry);
+                saveAlarmHistory();
+                renderHistory();
+            }
+            
+            function updateHistoryOnStop(alarmId, newSnoozeCount) {
+                const latestEntry = alarmHistory.find(h => h.alarmId === alarmId && h.stoppedAt === null);
+                if(latestEntry) {
+                    if (newSnoozeCount === -1) { // -1 signifies final stop
+                        latestEntry.stoppedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    } else {
+                        latestEntry.snoozeCount = newSnoozeCount;
+                    }
+                    saveAlarmHistory();
+                    renderHistory();
+                }
+            }
+
+            function renderHistory() {
+                historyContainer.innerHTML = "";
+                if (alarmHistory.length === 0) {
+                    historyContainer.textContent = "履歴がありません。";
+                    return;
+                }
+
+                alarmHistory.slice(0, 10).forEach(h => {
+                    const div = document.createElement("div");
+                    div.className = "alarm-item history-list";
+
+                    const currentAlarm = alarms.find(a => a.id === h.alarmId);
+                    if (!currentAlarm || !currentAlarm.enabled) {
+                        div.classList.add('disabled-alarm');
+                    }
+
+                    const timeSpan = document.createElement("span");
+                    timeSpan.textContent = `${h.hour.toString().padStart(2, "0")}:${h.minute.toString().padStart(2, "0")}`;
+
+                    const toggleBtn = document.createElement("button");
+                    toggleBtn.className = "toggle";
+                    
+                    if (currentAlarm) {
+                        toggleBtn.textContent = currentAlarm.enabled ? "ON" : "OFF";
+                        toggleBtn.addEventListener("click", () => {
+                            currentAlarm.enabled = !currentAlarm.enabled;
+                            if (currentAlarm.enabled) scheduleAlarm(currentAlarm);
+                            else cancelAlarm(currentAlarm.id);
+                            saveAlarms();
+                            renderAlarms();
+                            renderHistory();
+                        });
+                    } else {
+                        toggleBtn.textContent = "OFF";
+                        toggleBtn.disabled = true;
+                    }
+
+                    const detailDiv = document.createElement("div");
+                    detailDiv.className = "detail-info";
+                    
+                    detailDiv.innerHTML = `
+                        スヌーズ間隔: ${h.snoozeInterval || h.snoozeinterval || '-'}分<br>
+                        目標起床時刻: ${h.targetWakeup || h.targetwakeup || '-'}<br>
+                        最終起床時刻: ${h.stoppedAt || h.finalwakeup || '-'}<br>
+                        スヌーズ回数: ${h.snoozeCount ?? h.snoozecount ?? 0}
+                    `;
+
+                    const topRow = document.createElement("div");
+                    topRow.className = "top-row";
+                    topRow.appendChild(timeSpan);
+                    topRow.appendChild(toggleBtn);
+
+                    div.appendChild(topRow);
+                    div.appendChild(detailDiv);
+
+                    historyContainer.appendChild(div);
+                });
+            }
+
+            function saveAlarmHistory() {
+                localStorage.setItem("alarmHistory", JSON.stringify(alarmHistory));
+            }
+            function loadAlarmHistory() {
+                alarmHistory = JSON.parse(localStorage.getItem("alarmHistory")) || [];
+            }
+
+            function showAlarmModal(alarm, snoozeCount = 0) {
+                currentAlarmModal = alarm;
+                alarmModal.style.display = "flex";
+                alarmModal.focus();
+
+                if (snoozeCount > 0) {
+                    friendlyMessage.textContent = `${snoozeCount}回目のスヌーズです。もう少し！`;
+                    friendlyMessage.style.display = 'block';
+                } else {
+                    friendlyMessage.style.display = 'none';
+                }
+            }
+
+            function saveAlarms() {
+                localStorage.setItem("alarms", JSON.stringify(alarms));
+            }
+
+            function loadAlarms() {
+                const data = localStorage.getItem("alarms");
+                if (data) alarms = JSON.parse(data);
+                sortAlarms();
+            }
+
+            function showPage(pageId) {
+                pages.forEach(p => p.classList.toggle("active", p.id === pageId));
+                navItems.forEach(nav => {
+                    nav.classList.toggle("active", nav.dataset.page === pageId);
+                    nav.setAttribute("aria-current", nav.dataset.page === pageId ? "page" : "false");
+                });
+                if (pageId === 'historyPage') renderHistory();
+            }
+
+            function toggleDeleteMode() {
+                isDeleteMode = !isDeleteMode;
+                toggleDeleteBtn.style.color = isDeleteMode ? "#f33" : "white";
+                renderAlarms();
+            }
+
+            function closeAddEditUI() {
+                addAlarmUI.style.display = "none";
+                editingAlarmId = null;
+                addAlarmTitle.textContent = "アラーム追加";
+                addAlarmBtn.textContent = "追加";
+            }
+            
+            function openEditUI(alarm) {
+                editingAlarmId = alarm.id;
+                addAlarmTitle.textContent = "アラーム変更";
+                addAlarmBtn.textContent = "変更";
+                hourSelect.value = alarm.hour;
+                minuteSelect.value = alarm.minute;
+                addAlarmUI.style.display = "block";
+            }
+
+            function init() {
+                initSettings();
+                loadAlarms();
+                alarms.forEach(alarm => { if (alarm.enabled) scheduleAlarm(alarm); });
+                renderAlarms();
+                loadAlarmHistory();
+                renderHistory();
+
+                setInterval(updateClock, 1000);
+                updateClock();
+
+                showAddBtn.addEventListener("click", () => {
+                    editingAlarmId = null;
+                    addAlarmTitle.textContent = "アラーム追加";
+                    addAlarmBtn.textContent = "追加";
+                    addAlarmUI.style.display = "block";
+                });
+                
+                cancelAddBtn.addEventListener("click", closeAddEditUI);
+                
+                addAlarmBtn.addEventListener("click", () => {
+                    const h = parseInt(hourSelect.value, 10);
+                    const m = parseInt(minuteSelect.value, 10);
+                    if (editingAlarmId !== null) updateAlarm(editingAlarmId, h, m);
+                    else addAlarm(h, m);
+                    closeAddEditUI();
+                });
+
+                toggleDeleteBtn.addEventListener("click", toggleDeleteMode);
+
+                stopBtn.addEventListener("click", () => {
+                    if (isAlarmPlaying) {
+                        if (settings.autoSnooze) {
+                            snoozeAlarm(currentAlarmModal);
+                        } else {
+                            stopAlarmPermanently();
+                        }
+                    }
+                });
+
+                snoozeBtn.addEventListener("click", () => {
+                    if (isAlarmPlaying) snoozeAlarm(currentAlarmModal);
+                });
+
+                navItems.forEach(nav => {
+                    nav.addEventListener("click", () => showPage(nav.dataset.page));
+                    nav.addEventListener("keydown", e => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            showPage(nav.dataset.page);
+                        }
+                    });
+                });
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
