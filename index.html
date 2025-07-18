@@ -8,26 +8,26 @@
     <style>
         :root {
             --font-size-base: 16px;
-            --bg-color: #1d2a7a;
-            --text-color: white;
-            --text-color-faded: #ccc;
-            --accent-color: #86f20b;
-            --header-bg: #1d2a7a;
-            --nav-bg: #1d2a7a;
-            --nav-active-bg: white;
-            --nav-active-color: #1d2a7a;
-            --alarm-pm-bg: #2c3e8a;
-            --alarm-pm-color: white;
+            --bg-color: #f0f8ff; /* デフォルトを朝モードに変更 */
+            --text-color: #2c3e50;
+            --text-color-faded: #555;
+            --accent-color: #ff8c00;
+            --header-bg: #add8e6;
+            --nav-bg: #add8e6;
+            --nav-active-bg: #4682b4;
+            --nav-active-color: white;
+            --alarm-pm-bg: #e6e6fa;
+            --alarm-pm-color: #2c3e50;
             --alarm-disabled-color: gray;
-            --alarm-disabled-pm-bg: #4a5a9a;
+            --alarm-disabled-pm-bg: #dcdcdc;
             --button-bg: #444;
             --button-text-color: white;
-            --control-bg: #f0f0f0;
-            --control-text-color: #1d2a7a;
-            --control-border-color: #aaa;
+            --control-bg: #e6f7ff;
+            --control-text-color: #2c3e50;
+            --control-border-color: #99cbe2;
         }
 
-        /* 朝モード */
+        /* 朝モード (デフォルトとして:rootに移動) */
         .theme-morning {
             --bg-color: #f0f8ff;
             --text-color: #2c3e50;
@@ -54,9 +54,9 @@
             --nav-bg: #1d2a7a;
             --nav-active-bg: white;
             --nav-active-color: #1d2a7a;
-            --alarm-pm-bg: white; /* 変更: 午後のアラームの背景色 */
-            --alarm-pm-color: #1d2a7a; /* 変更: 午後のアラームの文字色 */
-            --alarm-disabled-pm-bg: #e0e0e0; /* 変更: 無効な午後のアラームの背景色 */
+            --alarm-pm-bg: white; /* 午後のアラーム背景を白に */
+            --alarm-pm-color: #1d2a7a; /* 午後のアラーム文字色を紺に */
+            --alarm-disabled-pm-bg: #e0e0e0;
             --control-bg: #3a4c9a;
             --control-text-color: white;
             --control-border-color: #5a6cb0;
@@ -110,19 +110,23 @@
             flex-direction: column;
             justify-content: flex-start;
             min-height: 100vh;
-            padding: 20px 0 60px; /* footerの高さ分を追加 */
+            /* ★変更点: フッターの高さ(48px)+余白を考慮 */
+            padding: 20px 0 56px; 
             box-sizing: border-box;
             transition: background-color 0.3s, color 0.3s;
         }
 
         .clock-container,
         #alarmPage,
-        footer {
+        #historyPage,
+        #settingsPage,
+        header {
             width: 375px;
             max-width: 100%;
             margin: 0 auto;
+            box-sizing: border-box; /* コンテンツエリアの計算を統一 */
         }
-
+        
         header {
             display: flex;
             justify-content: space-between;
@@ -131,9 +135,6 @@
             font-size: 1.5rem; /* 24px */
             font-weight: bold;
             user-select: none;
-            width: 375px;
-            max-width: 100%;
-            margin: 0 auto;
             background: var(--header-bg);
             color: var(--text-color);
             transition: background-color 0.3s, color 0.3s;
@@ -147,8 +148,12 @@
         .page {
             flex-grow: 1;
             overflow-y: auto;
-            padding: 1rem 1rem;
+            padding: 1rem;
             display: none;
+            width: 375px;
+            max-width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
         }
 
         .page.active {
@@ -169,11 +174,12 @@
             box-sizing: border-box;
             border-top: none;
         }
-
+        
+        /* ★変更点: 午後のアラームのスタイル指定 */
         .alarm-item.alarm-list.alarm-pm-theme {
             background-color: var(--alarm-pm-bg);
             color: var(--alarm-pm-color);
-            border-radius: 0;
+            border-radius: 8px; /* 角丸を他のアイテムと統一 */
         }
 
         .alarm-item.disabled-alarm {
@@ -245,15 +251,14 @@
             color: var(--button-text-color);
         }
 
+        /* ★変更点: ナビゲーションバーのスタイル */
         footer {
             position: fixed;
             display: flex;
-            padding: 0;
             bottom: 0;
             left: 0;
             right: 0;
-            max-width: 375px;
-            margin: 0 auto;
+            width: 100%; /* 画面幅いっぱいに広げる */
             background: var(--nav-bg);
             border-top: 1px solid #333;
             height: 48px;
@@ -324,7 +329,6 @@
             align-items: center;
             padding: 20px 16px;
             width: 100%;
-            max-width: 500px;
             margin: 0 auto;
         }
 
@@ -392,14 +396,6 @@
             margin-top: 20px;
         }
 
-        #historyPage,
-        #settingsPage {
-            max-width: 375px;
-            margin: 0 auto;
-            padding: 0 1rem;
-            box-sizing: border-box;
-        }
-
         #historyContainer {
             padding: 1rem 0;
         }
@@ -464,6 +460,7 @@
     </style>
 </head>
 <body class="theme-night">
+    <!-- HTMLの残りの部分は変更ありません -->
     <main class="clock-container">
         <div id="clock" class="clock">--:--:--</div>
     </main>
@@ -595,8 +592,8 @@
             設定
         </div>
     </footer>
-
     <script>
+       // JavaScript部分は変更ありません
         (() => {
             "use strict";
 
